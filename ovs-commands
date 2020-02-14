@@ -1,0 +1,246 @@
+$ sudo ovs-vsctl -V
+ovs-vsctl (Open vSwitch) 2.5.4
+Compiled Oct 30 2017 10:38:01
+DB Schema 7.12.1
+
+# Printing the brief overview of database configuration
+$ sudo ovs-vsctl show
+898a8d3d-490d-44fa-beab-09a15a1294d8
+    Bridge "s1"
+        Controller "ptcp:6634"
+        fail_mode: standalone
+        Port "s1-eth1"
+            Interface "s1-eth1"
+        Port "s1-eth3"
+            Interface "s1-eth3"
+        Port "s1-eth4"
+            Interface "s1-eth4"
+        Port "s1"
+            Interface "s1"
+                type: internal
+        Port "s1-eth2"
+            Interface "s1-eth2"
+    ovs_version: "2.5.4"
+
+# Listing all the configured bridges
+$ sudo ovs-vsctl list-br
+s1
+
+# Printing list of all the ports on a specific bridge
+$ sudo ovs-vsctl list-ports s1
+s1-eth1
+s1-eth2
+s1-eth3
+s1-eth4
+
+# Printing all the interfaces
+$ sudo ovs-vsctl list interface
+_uuid               : 448b6dec-1552-4918-82f8-8517e808e49b
+admin_state         : up
+bfd                 : {}
+bfd_status          : {}
+cfm_fault           : []
+cfm_fault_status    : []
+cfm_flap_count      : []
+cfm_health          : []
+cfm_mpid            : []
+cfm_remote_mpids    : []
+cfm_remote_opstate  : []
+duplex              : full
+error               : []
+external_ids        : {}
+ifindex             : 661
+ingress_policing_burst: 0
+ingress_policing_rate: 0
+lacp_current        : []
+link_resets         : 0
+link_speed          : 10000000000
+link_state          : up
+lldp                : {}
+mac                 : []
+mac_in_use          : "0a:c0:8d:69:19:59"
+mtu                 : 1500
+name                : "s1-eth2"
+ofport              : 2
+ofport_request      : 2
+options             : {}
+other_config        : {}
+statistics          : {collisions=0, rx_bytes=1916, 
+rx_crc_err=0, rx_dropped=0, rx_errors=0, rx_frame_err=0, 
+rx_over_err=0, rx_packets=26, tx_bytes=8583, tx_dropped=0, 
+tx_errors=0, tx_packets=86}
+status              : {driver_name=veth, 
+driver_version="1.0", firmware_version=""}
+type                : ""
+
+# Creating a bridge in the switch database
+$ sudo ovs-vsctl add-br s2
+
+# Adding physical or virtual interface to the bridge
+$ sudo ovs-vsctl add-port <bridge> <interface>
+
+# Converting port to an access port on specified VLAN 
+(by default all OVS ports are VLAN trunks).
+$ sudo ovs-vsctl add-port <bridge> <interface> 
+tag=<VLAN number>
+
+# Creating patch ports to connect two or more bridges together.
+$ ovs-vsctl set interface <interface> type=patch 
+options:peer=<interface>
+
+
+#ovs-ofctl
+
+#Terminal 2
+#OpenFlow features and port description
+$ sudo ovs-ofctl show s1
+OFPT_FEATURES_REPLY (xid=0x2): dpid:0000000000000001
+n_tables:254, n_buffers:256
+capabilities: FLOW_STATS TABLE_STATS PORT_STATS 
+QUEUE_STATS ARP_MATCH_IP
+actions: output enqueue set_vlan_vid set_vlan_pcp 
+strip_vlan mod_dl_src mod_dl_dst mod_nw_src mod_nw_dst 
+mod_nw_tos mod_tp_src mod_tp_dst
+
+ 1(s1-eth1): addr:8a:8b:3b:7a:fd:97
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 2(s1-eth2): addr:0a:c0:8d:69:19:59
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 3(s1-eth3): addr:1e:10:eb:ba:ee:0d
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 4(s1-eth4): addr:7a:cc:82:e3:85:19
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ LOCAL(s1): addr:96:ef:c3:dd:77:42
+     config:     PORT_DOWN
+     state:      LINK_DOWN
+     speed: 0 Mbps now, 0 Mbps max
+OFPT_GET_CONFIG_REPLY (xid=0x4): frags=normal 
+miss_send_len=0
+
+
+# Print the flow entries of a specified bridge.  
+
+$ sudo ovs-ofctl -O OpenFlow13 dump-flows s1
+OFPST_FLOW reply (OF1.3) (xid=0x2):
+ cookie=0x0, duration=2332.931s, table=0, n_packets=150, 
+ n_bytes=10772, priority=0 actions=NORMAL
+
+#Print port statistics. This will show detailed 
+information about interfaces in this bridge, includes 
+the state, peer, and speed information. 
+$ sudo ovs-ofctl dump-ports-desc s1
+OFPST_PORT_DESC reply (xid=0x2):
+ 1(s1-eth1): addr:8a:8b:3b:7a:fd:97
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 2(s1-eth2): addr:0a:c0:8d:69:19:59
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 3(s1-eth3): addr:1e:10:eb:ba:ee:0d
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ 4(s1-eth4): addr:7a:cc:82:e3:85:19
+     config:     0
+     state:      0
+     current:    10GB-FD COPPER
+     speed: 10000 Mbps now, 0 Mbps max
+ LOCAL(s1): addr:96:ef:c3:dd:77:42
+     config:     PORT_DOWN
+     state:      LINK_DOWN
+     speed: 0 Mbps now, 0 Mbps max
+
+#Print description of the tables belonging 
+to the bridge.
+$ sudo ovs-ofctl dump-tables s1
+OFPST_TABLE reply (xid=0x2):
+  table 0 ("classifier"):
+    active=1, lookup=137, matched=137
+    max_entries=1000000
+    matching:
+      in_port: exact match or wildcard
+      eth_src: exact match or wildcard
+      eth_dst: exact match or wildcard
+      eth_type: exact match or wildcard
+      vlan_vid: exact match or wildcard
+      vlan_pcp: exact match or wildcard
+      ip_src: exact match or wildcard
+      ip_dst: exact match or wildcard
+      nw_proto: exact match or wildcard
+      nw_tos: exact match or wildcard
+      tcp_src: exact match or wildcard
+      tcp_dst: exact match or wildcard
+
+  table 1 ("table1"):
+    active=0, lookup=0, matched=0
+    (same features)
+
+  table 2 ("table2"): ditto
+  table 3 ("table3"): ditto
+  
+#  Adding a static flow to the specified bridge.
+$ ovs-ofctl add-flow <bridge> <flow>
+
+# Deleting a flow from a specified bridge
+ovs-ofctl del-flows <bridge> <flow>
+
+# ovs-dpctl
+#Terminal 2
+#Creating datapath
+
+$ ovs-dpctl add-dp dp1
+$ ovs-dpctl add-if dp1 eth0
+
+#Checking  flow table data
+$ ovs-dpctl dump-flows 
+
+# ovs-appctl
+# Dumping the OpenFlow flows including the hidden ones.
+$ sudo ovs-appctl bridge/dump-flows s1
+duration=3365s, n_packets=150, n_bytes=10772, priority=0,actions=NORMAL
+table_id=254, duration=3365s, n_packets=0, n_bytes=0, priority=2,recirc_id=0,actions=drop
+table_id=254, duration=3365s, n_packets=0, n_bytes=0, priority=0,reg0=0x1,actions=controller(reason=no_match)
+table_id=254, duration=3365s, n_packets=0, n_bytes=0, priority=0,reg0=0x2,actions=drop
+table_id=254, duration=3365s, n_packets=0, n_bytes=0, priority=0,reg0=0x3,actions=drop
+
+# Dumping datapath flows for only the specified bridge, regardless of the type.
+$ ovs-appctl dpif/dump-flows <bridge>
+
+#  Lists the known logging modules and their current levels. 
+$ sudo ovs-appctl vlog/list
+                 console    syslog    file
+                 -------    ------    ------
+backtrace          OFF        ERR       INFO
+bfd                OFF        ERR       INFO
+bond               OFF        ERR       INFO
+bridge             OFF        ERR       INFO
+bundle             OFF        ERR       INFO
+bundles            OFF        ERR       INFO
+cfm                OFF        ERR       INFO
+classifier         OFF        ERR       INFO
+collectors         OFF        ERR       INFO
+command_line       OFF        ERR       INFO
+connmgr            OFF        ERR       INFO
+coverage           OFF        ERR       INFO
+daemon             OFF        ERR       INFO
+daemon_unix        OFF        ERR       INFO
+dpif               OFF        ERR       INFO
+dpif_netdev        OFF        ERR       INFO
+
